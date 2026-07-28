@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tarazu — Price & Weight Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#eef2ef;
+    --bg2:#e6ede8;
+    --card-top:#cdf3e0;
+    --card-bottom:#ffffff;
+    --panel:#ffffff;
+    --line: rgba(20,23,26,0.08);
+    --line-hi: rgba(20,23,26,0.14);
+    --ink:#14171a;
+    --ink-dim:#68706c;
+    --ink-faint:#9aa1a0;
+    --mint:#22c55e;
+    --mint-dim: rgba(34,197,94,0.15);
+    --amber:#f2b332;
+    --amber-dim: rgba(242,179,50,0.18);
+    --lavender:#8b7cf6;
+    --lavender-dim: rgba(139,124,246,0.15);
+    --sky:#38bdf8;
+    --sky-dim: rgba(56,189,248,0.15);
+    --cta-bg:#14171a;
+    --cta-text:#ffffff;
+    --radius: 28px;
+    --radius-sm: 16px;
+    --shadow: 0 24px 46px -24px rgba(20,45,35,0.22);
+    --shadow-sm: 0 10px 22px -12px rgba(20,45,35,0.22);
+  }
+  [data-theme="dark"]{
+    --bg:#0c1310;
+    --bg2:#0a0f0c;
+    --card-top:#123024;
+    --card-bottom:#0e1815;
+    --panel:#101c17;
+    --line: rgba(255,255,255,0.08);
+    --line-hi: rgba(255,255,255,0.16);
+    --ink:#eef4f0;
+    --ink-dim:#9db3a7;
+    --ink-faint:#5c6d64;
+    --mint:#34d399;
+    --mint-dim: rgba(52,211,153,0.16);
+    --amber:#fbbf24;
+    --amber-dim: rgba(251,191,36,0.16);
+    --lavender:#a78bfa;
+    --lavender-dim: rgba(167,139,250,0.16);
+    --sky:#38bdf8;
+    --sky-dim: rgba(56,189,248,0.16);
+    --cta-bg:#eef4f0;
+    --cta-text:#0c1310;
+    --shadow: 0 24px 50px -22px rgba(0,0,0,0.6);
+    --shadow-sm: 0 10px 22px -12px rgba(0,0,0,0.5);
+  }
+
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background: radial-gradient(1200px 600px at 20% -10%, var(--card-top) 0%, transparent 55%), var(--bg);
+    color:var(--ink);
+    font-family:'Inter', system-ui, sans-serif;
+    min-height:100vh;
+    transition: background .5s ease, color .5s ease;
+  }
+  ::selection{ background: var(--mint-dim); color: var(--ink); }
+
+  .wrap{ max-width: 1000px; margin: 0 auto; padding: 26px 20px 90px; }
+
+  /* ---------- HEADER ---------- */
+  header.hero{ display:flex; align-items:center; justify-content:space-between; gap:16px; padding: 6px 2px 28px; margin-bottom: 22px; }
+  .brand{ display:flex; align-items:center; gap:14px; }
+  .brand-mark-shell{
+    width:52px; height:52px; flex:0 0 auto; border-radius:18px;
+    background: linear-gradient(150deg, var(--mint), var(--sky));
+    display:flex; align-items:center; justify-content:center;
+    box-shadow: var(--shadow-sm);
+    position:relative; overflow:hidden;
+  }
+  .brand-mark-shell::after{ content:''; position:absolute; top:-40%; left:-20%; width:90%; height:90%; background: rgba(255,255,255,0.35); border-radius:50%; filter: blur(10px); transform: rotate(-20deg); }
+  .brand-mark{ width:28px; height:28px; position:relative; z-index:1; }
+  .beam{ transform-origin: 50% 50%; transition: transform .5s cubic-bezier(.34,1.56,.64,1); }
+
+  .brand-text .eyebrow{ font-family:'Inter', sans-serif; font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--mint); margin:0 0 4px; font-weight:700; }
+  .brand-text h1{ font-family:'Plus Jakarta Sans', sans-serif; font-weight:800; font-size:26px; margin:0; letter-spacing:-0.02em; }
+  .brand-text p{ margin:4px 0 0; font-size:13px; color:var(--ink-dim); }
+
+  .header-actions{ display:flex; align-items:center; gap:9px; }
+  .icon-btn{
+    width:44px; height:44px; border-radius:50%; background:var(--panel);
+    box-shadow: var(--shadow-sm); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--ink);
+    transition: all .25s cubic-bezier(.34,1.56,.64,1);
+  }
+  .icon-btn:hover{ transform: translateY(-3px) scale(1.04); }
+  .icon-btn svg{ width:18px; height:18px; }
+
+  .theme-toggle-btn{
+    width:44px; height:44px; border-radius:50%; background:var(--panel); box-shadow: var(--shadow-sm);
+    border:1px solid var(--line); display:flex; align-items:center; justify-content:center; cursor:pointer;
+    color:var(--ink); transition: all .25s cubic-bezier(.34,1.56,.64,1); flex:0 0 auto; position:relative; overflow:hidden;
+  }
+  .theme-toggle-btn:hover{ transform: translateY(-3px) scale(1.04); }
+  .theme-toggle-btn svg{ width:19px; height:19px; position:absolute; transition: opacity .25s ease, transform .35s cubic-bezier(.34,1.56,.64,1); }
+  .theme-toggle-btn .icon-sun{ opacity:0; transform: rotate(-60deg) scale(.5); }
+  .theme-toggle-btn .icon-moon{ opacity:1; transform: rotate(0) scale(1); }
+  [data-theme="dark"] .theme-toggle-btn .icon-sun{ opacity:1; transform: rotate(0) scale(1); }
+  [data-theme="dark"] .theme-toggle-btn .icon-moon{ opacity:0; transform: rotate(60deg) scale(.5); }
+
+  /* ---------- TABS as 3D icon tiles ---------- */
+  .tabs{ display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin-bottom: 22px; }
+  .tab-btn{
+    display:flex; flex-direction:column; align-items:flex-start; gap:10px;
+    font-family:'Plus Jakarta Sans', sans-serif; font-weight:700; font-size:12.5px; color:var(--ink-dim);
+    background:var(--panel); border:1px solid var(--line); border-radius: 20px;
+    padding:14px; cursor:pointer; text-align:left; line-height:1.25;
+    transition: all .3s cubic-bezier(.34,1.56,.64,1); box-shadow: var(--shadow-sm);
+  }
+  .icon-tile{
+    width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+    position:relative; overflow:hidden; flex:0 0 auto;
+  }
+  .icon-tile::after{ content:''; position:absolute; top:-45%; left:-15%; width:85%; height:85%; background: rgba(255,255,255,0.4); border-radius:50%; filter: blur(6px); transform: rotate(-20deg); }
+  .icon-tile svg{ width:19px; height:19px; position:relative; z-index:1; }
+  .icon-tile.c1{ background: linear-gradient(150deg, #7be0ab, var(--mint)); box-shadow: 0 8px 16px -8px rgba(34,197,94,0.6); }
+  .icon-tile.c2{ background: linear-gradient(150deg, #ffd699, var(--amber)); box-shadow: 0 8px 16px -8px rgba(242,179,50,0.6); }
+  .icon-tile.c3{ background: linear-gradient(150deg, #c4b8fc, var(--lavender)); box-shadow: 0 8px 16px -8px rgba(139,124,246,0.6); }
+  .icon-tile.c4{ background: linear-gradient(150deg, #9de3fb, var(--sky)); box-shadow: 0 8px 16px -8px rgba(56,189,248,0.6); }
+
+  .tab-btn:hover{ transform: translateY(-3px); border-color: var(--line-hi); }
+  .tab-btn.active{ border-color: transparent; box-shadow: var(--shadow); transform: translateY(-2px); color:var(--ink); }
+
+  /* ---------- PANELS ---------- */
+  .panel{ display:none; }
+  .panel.active{ display:block; animation: rise .4s cubic-bezier(.2,.9,.3,1); }
+  @keyframes rise{ from{ opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+
+  .card{
+    background: var(--panel); border:1px solid var(--line); border-radius: var(--radius);
+    padding: 26px; box-shadow: var(--shadow-sm); transition: box-shadow .3s ease, border-color .3s ease;
+  }
+  .card:hover{ box-shadow: var(--shadow); }
+  .card + .card{ margin-top:16px; }
+  .card h2{ font-family:'Plus Jakarta Sans', sans-serif; font-weight:700; font-size:18px; margin:0 0 4px; letter-spacing:-0.01em; }
+  .card .sub{ margin:0 0 20px; color:var(--ink-dim); font-size:13px; }
+
+  .field-row{ display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-bottom: 10px; }
+  .field{ display:flex; flex-direction:column; gap:7px; }
+  .field label{ font-size:12px; color:var(--ink-dim); font-weight:600; display:flex; justify-content:space-between; align-items:center; }
+  .field .unit-toggle{ font-family:'Inter', sans-serif; font-size:10.5px; font-weight:700; color: var(--mint); background:var(--mint-dim); border:1px solid transparent; border-radius:8px; padding:4px 9px; cursor:pointer; transition: transform .2s ease; }
+  .field .unit-toggle:hover{ transform: scale(1.06); }
+
+  .input-shell{ position:relative; display:flex; align-items:center; }
+  .input-shell .prefix{ position:absolute; left:16px; color:var(--ink-faint); font-family:'Plus Jakarta Sans', sans-serif; font-size:15px; font-weight:700; pointer-events:none; }
+  .input-shell input{
+    width:100%; background: var(--bg2); border:1px solid var(--line); color:var(--ink);
+    border-radius: var(--radius-sm); padding:14px 76px 14px 32px;
+    font-family:'Plus Jakarta Sans', sans-serif; font-variant-numeric: tabular-nums;
+    font-size:16px; font-weight:700; outline:none;
+    transition: border-color .2s ease, box-shadow .2s ease;
+  }
+  [data-theme="dark"] .input-shell input{ background: rgba(255,255,255,0.03); }
+  .input-shell input:focus{ border-color: var(--mint); box-shadow: 0 0 0 4px var(--mint-dim); }
+  .input-shell input.no-prefix{ padding-left:16px; }
+  .input-shell.invalid input{ border-color: #ef4444; }
+  .field-error{ font-size:11px; color:#ef4444; min-height:14px; margin-top:2px; }
+
+  .stepper{ position:absolute; right:6px; top:6px; bottom:6px; display:flex; flex-direction:column; gap:2px; }
+  .stepper button{
+    flex:1; width:30px; border:none; border-radius:8px; background: var(--panel); color:var(--ink-dim);
+    font-family:'Inter', monospace; font-size:11px; font-weight:700; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; transition: all .18s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  }
+  .stepper button:hover{ background: var(--mint); color:#fff; transform: scale(1.08); }
+  .stepper button:active{ transform: scale(.94); }
+
+  .chip-row{ display:flex; flex-wrap:wrap; gap:8px; margin: 10px 0 18px; }
+  .chip{
+    font-family:'Inter', sans-serif; font-size:12px; font-weight:700;
+    color: var(--ink); background: var(--mint-dim); border:1px solid transparent;
+    border-radius:999px; padding:8px 14px; cursor:pointer; transition: all .25s cubic-bezier(.34,1.56,.64,1);
+  }
+  .chip:nth-child(4n+2){ background: var(--amber-dim); }
+  .chip:nth-child(4n+3){ background: var(--lavender-dim); }
+  .chip:nth-child(4n+4){ background: var(--sky-dim); }
+  .chip:hover{ transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+
+  /* ---------- RESULT (mint gradient balance card) ---------- */
+  .result{
+    margin-top: 6px; padding: 26px; border-radius: var(--radius-sm);
+    background: linear-gradient(165deg, var(--mint-dim), transparent 65%), var(--bg2);
+    border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  }
+  .result .big{ font-family:'Plus Jakarta Sans', sans-serif; font-weight:800; font-size:40px; letter-spacing:-0.02em; transition: filter .2s ease; }
+  .result .big.pulse{ animation: pulseNum .5s ease; }
+  @keyframes pulseNum{ 0%{ filter: brightness(1.25); } 100%{ filter: brightness(1);} }
+  .result .big .small-unit{ font-size:17px; font-weight:600; color:var(--ink-dim); margin-left:4px;}
+  .result .meta{ font-size:12px; color:var(--ink-dim); font-family:'Inter', sans-serif; font-weight:600; margin-top:4px; }
+  .result-buttons{ display:flex; gap:8px; }
+
+  .cta-btn{
+    border:none; background: var(--cta-bg); color: var(--cta-text);
+    font-family:'Inter', sans-serif; font-size:12.5px; font-weight:700;
+    padding:12px 20px; border-radius:999px; cursor:pointer; white-space:nowrap;
+    transition: all .25s cubic-bezier(.34,1.56,.64,1); display:flex; align-items:center; gap:6px;
+  }
+  .cta-btn:hover{ transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+  .cta-btn.ghost{ background: var(--panel); color: var(--ink); border:1px solid var(--line); }
+  .cta-btn.copied{ background: var(--mint); color:#fff; }
+
+  .actions-row{ display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:16px; flex-wrap:wrap; }
+  .clear-btn{ border:1px solid var(--line); background:transparent; color:var(--ink-faint); font-size:12px; font-family:'Inter',sans-serif; font-weight:600; padding:9px 15px; border-radius:999px; cursor:pointer; transition: all .25s ease; }
+  .clear-btn:hover{ color: #ef4444; border-color: #ef4444; }
+
+  /* ---------- VISUALS ---------- */
+  .viz-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-top:18px; }
+  @media (max-width: 620px){ .viz-grid{ grid-template-columns:1fr; } }
+  .viz-box{ background: var(--bg2); border:1px solid var(--line); border-radius: var(--radius-sm); padding:19px; }
+  .viz-box h3{ margin:0 0 13px; font-size:11px; text-transform:uppercase; letter-spacing:.09em; color:var(--ink-faint); font-weight:700; font-family:'Inter',sans-serif; }
+
+  .bar-track{ width:100%; height:16px; border-radius:999px; background: var(--line); overflow:hidden; }
+  .bar-fill{ height:100%; border-radius:999px; background: linear-gradient(90deg, var(--mint), var(--sky)); width:0%; transition: width .6s cubic-bezier(.2,.9,.3,1); }
+  .bar-label{ margin-top:10px; font-family:'Inter', sans-serif; font-size:12px; color:var(--ink-dim); display:flex; justify-content:space-between; font-weight:600;}
+
+  .circle-wrap{ display:flex; align-items:center; gap:18px; }
+  .circle-pct{ font-family:'Plus Jakarta Sans', sans-serif; font-size:22px; font-weight:800; }
+  .circle-sub{ font-size:11px; color:var(--ink-dim); font-family:'Inter', sans-serif; }
+
+  .pct-callout{ display:flex; align-items:center; justify-content:center; flex-direction:column; height:100%; text-align:center; padding: 8px 0 4px; }
+  .pct-callout .pctnum{ font-family:'Plus Jakarta Sans', sans-serif; font-size:32px; font-weight:800; color: var(--mint); }
+  .pct-callout .pcttext{ font-size:12px; color:var(--ink-dim); margin-top:5px; }
+
+  .ruler{ position:relative; padding-top:26px; }
+  .ruler-line{ position:relative; height:4px; background: var(--line-hi); border-radius:2px; margin: 0 4px; }
+  .ruler-fill{ position:absolute; left:0; top:0; height:100%; background: linear-gradient(90deg, var(--mint), var(--sky)); border-radius:2px; width:0%; transition: width .6s cubic-bezier(.2,.9,.3,1); }
+  .ruler-tick{ position:absolute; top:-22px; transform:translateX(-50%); font-family:'Inter', sans-serif; font-size:9.5px; color:var(--ink-faint); font-weight:600;}
+  .ruler-marker{ position:absolute; top:-7px; width:16px; height:16px; background: linear-gradient(150deg, var(--mint), var(--sky)); border-radius:50%; transform:translate(-50%, 0); box-shadow: 0 0 0 5px var(--mint-dim), 0 4px 10px -2px rgba(34,197,94,0.6); transition: left .6s cubic-bezier(.2,.9,.3,1); }
+
+  /* ---------- FORMULA ---------- */
+  .formula-toggle{ display:flex; align-items:center; justify-content:space-between; cursor:pointer; user-select:none; }
+  .formula-toggle .chevron{ transition: transform .3s cubic-bezier(.34,1.56,.64,1); color:var(--mint); }
+  .formula-toggle.open .chevron{ transform: rotate(180deg); }
+  .formula-body{ max-height:0; overflow:hidden; transition: max-height .4s cubic-bezier(.2,.9,.3,1); }
+  .formula-body .inner{ padding-top:16px; }
+  .formula-line{ font-family:'Inter', sans-serif; font-size:13.5px; font-weight:700; color: var(--ink); background: var(--bg2); border:1px solid var(--line); border-radius:14px; padding:12px 16px; margin-bottom:8px; }
+
+  /* ---------- TABLES ---------- */
+  .tables-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width: 620px){ .tables-grid{ grid-template-columns:1fr; } }
+  table{ width:100%; border-collapse:collapse; }
+  table th{ text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-faint); padding:0 0 10px; font-weight:700; border-bottom:1px solid var(--line); font-family:'Inter',sans-serif;}
+  table td{ padding:10px 0; font-family:'Inter', sans-serif; font-size:13.5px; font-weight:600; border-bottom:1px solid var(--line); color:var(--ink-dim); }
+  table tr:last-child td{ border-bottom:none; }
+  table td.highlight{ color: var(--mint); font-weight:800; }
+  table tr:hover td{ color:var(--ink); }
+
+  footer{ text-align:center; margin-top:44px; color:var(--ink-faint); font-size:11.5px; font-family:'Inter', sans-serif; letter-spacing:.02em; }
+
+  @media (max-width: 560px){
+    .field-row{ grid-template-columns:1fr; }
+    .tabs{ grid-template-columns: 1fr 1fr; }
+    .brand-text h1{ font-size:22px; }
+    .result .big{ font-size:32px; }
+    .input-shell input{ padding-right:60px; }
+  }
+  @media (prefers-reduced-motion: reduce){ *{ animation-duration: .001ms !important; transition-duration: .001ms !important; } }
+</style>
+</head>
+<body data-theme="light">
+<div class="wrap">
+
+  <header class="hero">
+    <div class="brand">
+      <div class="brand-mark-shell">
+        <svg class="brand-mark" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <line x1="50" y1="14" x2="50" y2="66" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round"/>
+          <g class="beam" id="heroBeam">
+            <line x1="18" y1="30" x2="82" y2="30" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round"/>
+            <line x1="18" y1="30" x2="18" y2="46" stroke="rgba(255,255,255,0.7)" stroke-width="2"/>
+            <line x1="82" y1="30" x2="82" y2="46" stroke="rgba(255,255,255,0.7)" stroke-width="2"/>
+            <path d="M8 46 Q18 60 28 46" stroke="#ffffff" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+            <path d="M72 46 Q82 60 92 46" stroke="#ffffff" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+          </g>
+          <circle cx="50" cy="14" r="5" fill="#ffffff"/>
+          <path d="M40 74 L60 74 L56 84 L44 84 Z" fill="rgba(255,255,255,0.7)"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <p class="eyebrow">Bazaar Math</p>
+        <h1>Tarazu</h1>
+        <p>Price ⇄ weight, worked out instantly</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="shareAppBtn" title="Share app link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>
+      </button>
+      <button class="icon-btn" id="clearAllBtn" title="Clear everything">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+      </button>
+      <button class="theme-toggle-btn" id="themeToggleBtn" title="Toggle light / dark">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.5"/><line x1="12" y1="2.5" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="21.5"/><line x1="4.2" y1="4.2" x2="6" y2="6"/><line x1="18" y1="18" x2="19.8" y2="19.8"/><line x1="2.5" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="21.5" y2="12"/><line x1="4.2" y1="19.8" x2="6" y2="18"/><line x1="18" y1="6" x2="19.8" y2="4.2"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.5A9 9 0 1 1 11.5 3a7 7 0 0 0 9.5 9.5Z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab-btn active" data-tab="p2w">
+      <div class="icon-tile c1"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4"/><path d="M5 7h14"/><path d="M6 7l-3 8a4 4 0 0 0 8 0l-3-8"/><path d="M18 7l-3 8a4 4 0 0 0 8 0l-3-8"/></svg></div>
+      Price → Weight
+    </button>
+    <button class="tab-btn" data-tab="w2p">
+      <div class="icon-tile c2"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 12.3 12.7 20a2 2 0 0 1-2.8 0l-7-7a2 2 0 0 1 0-2.8L10.6 2.6a2 2 0 0 1 1.4-.6H19a2 2 0 0 1 2 2v7a2 2 0 0 1-.4 1.3Z"/><circle cx="15" cy="9" r="1.2" fill="#fff" stroke="none"/></svg></div>
+      Weight → Price
+    </button>
+    <button class="tab-btn" data-tab="rate">
+      <div class="icon-tile c3"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2.5"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="8" y2="12"/><line x1="12" y1="12" x2="12" y2="12"/><line x1="16" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="12" y1="16" x2="12" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg></div>
+      Find Price/kg
+    </button>
+    <button class="tab-btn" data-tab="custom">
+      <div class="icon-tile c4"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="7" width="19" height="10" rx="2"/><line x1="6" y1="7" x2="6" y2="11"/><line x1="10" y1="7" x2="10" y2="10"/><line x1="14" y1="7" x2="14" y2="11"/><line x1="18" y1="7" x2="18" y2="10"/></svg></div>
+      Custom Units
+    </button>
+  </nav>
+
+  <!-- ============ PANEL 1: PRICE -> WEIGHT ============ -->
+  <section class="panel active" id="panel-p2w">
+    <div class="card">
+      <h2>How much can I buy?</h2>
+      <p class="sub">Enter the rate per kg and your budget — see the weight you'll walk away with.</p>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Price per kg</label>
+          <div class="input-shell"><span class="prefix">₹</span>
+            <input type="number" inputmode="decimal" id="p2w-rate" placeholder="100" min="0" step="any">
+            <div class="stepper"><button data-step="p2w-rate" data-dir="1">▲</button><button data-step="p2w-rate" data-dir="-1">▼</button></div>
+          </div>
+          <div class="field-error" id="err-p2w-rate"></div>
+        </div>
+        <div class="field">
+          <label>Your budget</label>
+          <div class="input-shell"><span class="prefix">₹</span>
+            <input type="number" inputmode="decimal" id="p2w-budget" placeholder="30" min="0" step="any">
+            <div class="stepper"><button data-step="p2w-budget" data-dir="1">▲</button><button data-step="p2w-budget" data-dir="-1">▼</button></div>
+          </div>
+          <div class="field-error" id="err-p2w-budget"></div>
+        </div>
+      </div>
+
+      <div class="chip-row" data-chip-target="p2w-rate" data-chip-values="40,80,100,150,250"></div>
+
+      <div class="result">
+        <div>
+          <div class="big" id="p2w-big"><span id="p2w-result-g">0</span><span class="small-unit">g</span></div>
+          <div class="meta" id="p2w-result-kg">0.000 kg</div>
+        </div>
+        <div class="result-buttons">
+          <button class="cta-btn ghost" data-copy-target="p2w">Copy</button>
+          <button class="cta-btn" data-share-target="p2w">Share</button>
+        </div>
+      </div>
+
+      <div class="viz-box" style="margin-top:18px;">
+        <h3>On the ruler</h3>
+        <div class="ruler">
+          <div class="ruler-line">
+            <div class="ruler-tick" style="left:0%">0g</div>
+            <div class="ruler-tick" style="left:25%">250g</div>
+            <div class="ruler-tick" style="left:50%">500g</div>
+            <div class="ruler-tick" style="left:75%">750g</div>
+            <div class="ruler-tick" style="left:100%">1000g</div>
+            <div class="ruler-fill" id="p2w-ruler-fill"></div>
+            <div class="ruler-marker" id="p2w-ruler-marker" style="left:0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions-row">
+        <button class="clear-btn" data-clear="p2w">Clear this panel</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="formula-toggle" data-formula-toggle>
+        <h2 style="margin:0;">Formula used</h2>
+        <span class="chevron">▾</span>
+      </div>
+      <div class="formula-body">
+        <div class="inner">
+          <div class="formula-line">Weight (g) = (Budget ÷ Price per kg) × 1000</div>
+          <div class="formula-line">Weight (kg) = Budget ÷ Price per kg</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Quick price table</h2>
+      <p class="sub">Based on your entered rate per kg.</p>
+      <div class="tables-grid">
+        <table>
+          <thead><tr><th>Weight</th><th>Price</th></tr></thead>
+          <tbody id="p2w-price-table"></tbody>
+        </table>
+        <table>
+          <thead><tr><th>Budget</th><th>Weight</th></tr></thead>
+          <tbody id="p2w-budget-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PANEL 2: WEIGHT -> PRICE ============ -->
+  <section class="panel" id="panel-w2p">
+    <div class="card">
+      <h2>How much will it cost?</h2>
+      <p class="sub">Enter the rate per kg and the weight you want — see the total.</p>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Price per kg</label>
+          <div class="input-shell"><span class="prefix">₹</span>
+            <input type="number" inputmode="decimal" id="w2p-rate" placeholder="100" min="0" step="any">
+            <div class="stepper"><button data-step="w2p-rate" data-dir="1">▲</button><button data-step="w2p-rate" data-dir="-1">▼</button></div>
+          </div>
+          <div class="field-error" id="err-w2p-rate"></div>
+        </div>
+        <div class="field">
+          <label>Weight wanted (g)</label>
+          <div class="input-shell">
+            <input class="no-prefix" type="number" inputmode="decimal" id="w2p-weight" placeholder="600" min="0" step="any">
+            <div class="stepper"><button data-step="w2p-weight" data-dir="1">▲</button><button data-step="w2p-weight" data-dir="-1">▼</button></div>
+          </div>
+          <div class="field-error" id="err-w2p-weight"></div>
+        </div>
+      </div>
+
+      <div class="chip-row" data-chip-target="w2p-weight" data-chip-values="100,250,500,750,1000"></div>
+
+      <div class="result">
+        <div>
+          <div class="big" id="w2p-big">₹<span id="w2p-result">0.00</span></div>
+          <div class="meta" id="w2p-result-meta">for 0 g</div>
+        </div>
+        <div class="result-buttons">
+          <button class="cta-btn ghost" data-copy-target="w2p">Copy</button>
+          <button class="cta-btn" data-share-target="w2p">Share</button>
+        </div>
+      </div>
+
+      <div class="viz-box" style="margin-top:18px;">
+        <h3>On the ruler</h3>
+        <div class="ruler">
+          <div class="ruler-line">
+            <div class="ruler-tick" style="left:0%">0g</div>
+            <div class="ruler-tick" style="left:25%">250g</div>
+            <div class="ruler-tick" style="left:50%">500g</div>
+            <div class="ruler-tick" style="left:75%">750g</div>
+            <div class="ruler-tick" style="left:100%">1000g</div>
+            <div class="ruler-fill" id="w2p-ruler-fill"></div>
+            <div class="ruler-marker" id="w2p-ruler-marker" style="left:0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions-row">
+        <button class="clear-btn" data-clear="w2p">Clear this panel</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="formula-toggle" data-formula-toggle>
+        <h2 style="margin:0;">Formula used</h2>
+        <span class="chevron">▾</span>
+      </div>
+      <div class="formula-body">
+        <div class="inner">
+          <div class="formula-line">Price = (Weight in g × Price per kg) ÷ 1000</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Quick price table</h2>
+      <p class="sub">Based on your entered rate per kg.</p>
+      <div class="tables-grid">
+        <table>
+          <thead><tr><th>Weight</th><th>Price</th></tr></thead>
+          <tbody id="w2p-price-table"></tbody>
+        </table>
+        <table>
+          <thead><tr><th>Budget</th><th>Weight</th></tr></thead>
+          <tbody id="w2p-budget-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PANEL 3: RATE FINDER ============ -->
+  <section class="panel" id="panel-rate">
+    <div class="card">
+      <h2>What's the rate per kg?</h2>
+      <p class="sub">Enter what you paid and the weight you got — back it out to price per kg.</p>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Weight purchased (g)</label>
+          <div class="input-shell">
+            <input class="no-prefix" type="number" inputmode="decimal" id="rate-weight" placeholder="500" min="0" step="any">
+            <div class="stepper"><button data-step="rate-weight" data-dir="1">▲</button><button data-step="rate-weight" data-dir="-1">▼</button></div>
+          </div>
+          <div class="field-error" id="err-rate-weight"></div>
+        </div>
+        <div class="field">
+          <label>Amount paid</label>
+          <div class="input-shell"><span class="prefix">₹</span>
+            <input type="number" inputmode="decimal" id="rate-amount" placeholder="80" min="0" step="any">
+            <div class="stepper"><button data-step="rate-amount" data-dir="1">▲</button><button data-step="rate-amount" data-dir="-1">▼</button></div>
+          </div>
+          <div class="field-error" id="err-rate-amount"></div>
+        </div>
+      </div>
+
+      <div class="result">
+        <div>
+          <div class="big" id="rate-big">₹<span id="rate-result">0.00</span><span class="small-unit">/kg</span></div>
+          <div class="meta" id="rate-result-meta">from 0 g for ₹0</div>
+        </div>
+        <div class="result-buttons">
+          <button class="cta-btn ghost" data-copy-target="rate">Copy</button>
+          <button class="cta-btn" data-share-target="rate">Share</button>
+        </div>
+      </div>
+
+      <div class="actions-row">
+        <button class="clear-btn" data-clear="rate">Clear this panel</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="formula-toggle" data-formula-toggle>
+        <h2 style="margin:0;">Formula used</h2>
+        <span class="chevron">▾</span>
+      </div>
+      <div class="formula-body">
+        <div class="inner">
+          <div class="formula-line">Price per kg = (Amount paid × 1000) ÷ Weight in g</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Quick price table</h2>
+      <p class="sub">Based on the rate this implies.</p>
+      <div class="tables-grid">
+        <table>
+          <thead><tr><th>Weight</th><th>Price</th></tr></thead>
+          <tbody id="rate-price-table"></tbody>
+        </table>
+        <table>
+          <thead><tr><th>Budget</th><th>Weight</th></tr></thead>
+          <tbody id="rate-budget-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PANEL 4: CUSTOM UNITS ============ -->
+  <section class="panel" id="panel-custom">
+    <div class="card">
+      <h2>Custom unit calculator</h2>
+      <p class="sub">Mix grams and kilograms freely — everything converts automatically.</p>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Price per kg</label>
+          <div class="input-shell"><span class="prefix">₹</span>
+            <input type="number" inputmode="decimal" id="custom-rate" placeholder="100" min="0" step="any">
+            <div class="stepper"><button data-step="custom-rate" data-dir="1">▲</button><button data-step="custom-rate" data-dir="-1">▼</button></div>
+          </div>
+          <div class="field-error" id="err-custom-rate"></div>
+        </div>
+        <div class="field">
+          <label>Amount
+            <span class="unit-toggle" id="custom-unit-toggle" data-unit="g">grams ⇄</span>
+          </label>
+          <div class="input-shell">
+            <input class="no-prefix" type="number" inputmode="decimal" id="custom-amount" placeholder="750" min="0" step="any">
+            <div class="stepper"><button data-step="custom-amount" data-dir="1">▲</button><button data-step="custom-amount" data-dir="-1">▼</button></div>
+          </div>
+          <div class="field-error" id="err-custom-amount"></div>
+        </div>
+      </div>
+
+      <div class="result">
+        <div>
+          <div class="big" id="custom-big">₹<span id="custom-result">0.00</span></div>
+          <div class="meta" id="custom-result-meta">for 0 g / 0.000 kg</div>
+        </div>
+        <div class="result-buttons">
+          <button class="cta-btn ghost" data-copy-target="custom">Copy</button>
+          <button class="cta-btn" data-share-target="custom">Share</button>
+        </div>
+      </div>
+
+
+      <div class="actions-row">
+        <button class="clear-btn" data-clear="custom">Clear this panel</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="formula-toggle" data-formula-toggle>
+        <h2 style="margin:0;">Formula used</h2>
+        <span class="chevron">▾</span>
+      </div>
+      <div class="formula-body">
+        <div class="inner">
+          <div class="formula-line">Grams → Kilograms: kg = g ÷ 1000</div>
+          <div class="formula-line">Kilograms → Grams: g = kg × 1000</div>
+          <div class="formula-line">Price = (Weight in g × Price per kg) ÷ 1000</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Quick tables</h2>
+      <p class="sub">Based on your entered rate per kg.</p>
+      <div class="tables-grid">
+        <table>
+          <thead><tr><th>Weight</th><th>Price</th></tr></thead>
+          <tbody id="custom-price-table"></tbody>
+        </table>
+        <table>
+          <thead><tr><th>Budget</th><th>Weight</th></tr></thead>
+          <tbody id="custom-budget-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <footer>Tarazu · works entirely on your device · no data leaves this page</footer>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  function num(v){ if(v === '' || v === null || v === undefined) return NaN; var n = parseFloat(v); return isNaN(n) ? NaN : n; }
+  function fmt(n, decimals){ if(!isFinite(n)) return '0'; decimals = decimals === undefined ? 2 : decimals; return n.toLocaleString('en-IN', { minimumFractionDigits:0, maximumFractionDigits: decimals }); }
+  function fmtFixed(n, decimals){ if(!isFinite(n)) n = 0; return n.toFixed(decimals); }
+  function clampPct(p){ return Math.max(0, Math.min(100, p)); }
+  function pulse(el){ el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse'); }
+
+  function setBar(fillEl, labelEl, grams){ var pct = clampPct((grams/1000)*100); fillEl.style.width = pct + '%'; labelEl.textContent = fmt(grams, 1) + ' g'; }
+  function setRuler(fillEl, markerEl, grams){ var pct = clampPct((grams/1000)*100); fillEl.style.width = pct + '%'; markerEl.style.left = pct + '%'; }
+  function setCircle(circleEl, pctEl, grams){ var pct = clampPct((grams/1000)*100); var circumference = 188.5; var offset = circumference - (pct/100)*circumference; circleEl.style.strokeDashoffset = offset; pctEl.textContent = fmt(pct, 0) + '%'; }
+
+  function buildPriceTable(tbody, ratePerKg){
+    var rows = [{w:100, label:'100 g'},{w:250, label:'250 g'},{w:500, label:'500 g'},{w:750, label:'750 g'},{w:1000, label:'1 kg'}];
+    tbody.innerHTML = '';
+    rows.forEach(function(r){
+      var price = isFinite(ratePerKg) ? (r.w * ratePerKg)/1000 : 0;
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td>'+r.label+'</td><td class="highlight">₹'+fmtFixed(price,2)+'</td>';
+      tbody.appendChild(tr);
+    });
+  }
+  function buildBudgetTable(tbody, ratePerKg){
+    var budgets = [10,20,30,50,100];
+    tbody.innerHTML = '';
+    budgets.forEach(function(b){
+      var grams = isFinite(ratePerKg) && ratePerKg > 0 ? (b/ratePerKg)*1000 : 0;
+      var label = grams >= 1000 ? (grams/1000).toFixed(2)+' kg' : fmt(grams,0)+' g';
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td>₹'+b+'</td><td class="highlight">'+label+'</td>';
+      tbody.appendChild(tr);
+    });
+  }
+  function showError(el, msg){ el.textContent = msg || ''; }
+  function markInvalid(inputEl, isInvalid){ inputEl.parentElement.classList.toggle('invalid', !!isInvalid); }
+
+  /* ---------- PANEL 1 (no bar/circle block — ruler only) ---------- */
+  var p2wRate = document.getElementById('p2w-rate');
+  var p2wBudget = document.getElementById('p2w-budget');
+  function calcP2W(animate){
+    var rate = num(p2wRate.value), budget = num(p2wBudget.value);
+    var validRate = p2wRate.value === '' || (isFinite(rate) && rate >= 0);
+    var validBudget = p2wBudget.value === '' || (isFinite(budget) && budget >= 0);
+    showError(document.getElementById('err-p2w-rate'), validRate ? '' : 'Enter a valid non-negative number');
+    showError(document.getElementById('err-p2w-budget'), validBudget ? '' : 'Enter a valid non-negative number');
+    markInvalid(p2wRate, !validRate); markInvalid(p2wBudget, !validBudget);
+
+    var grams = 0;
+    if(isFinite(rate) && rate > 0 && isFinite(budget) && budget >= 0){ grams = (budget/rate)*1000; }
+    document.getElementById('p2w-result-g').textContent = fmt(grams,1);
+    document.getElementById('p2w-result-kg').textContent = fmtFixed(grams/1000,3)+' kg';
+    if(animate) pulse(document.getElementById('p2w-big'));
+
+    setRuler(document.getElementById('p2w-ruler-fill'), document.getElementById('p2w-ruler-marker'), grams);
+    buildPriceTable(document.getElementById('p2w-price-table'), rate);
+    buildBudgetTable(document.getElementById('p2w-budget-table'), rate);
+  }
+  [p2wRate, p2wBudget].forEach(function(el){ el.addEventListener('input', function(){ calcP2W(true); }); });
+
+  /* ---------- PANEL 2 ---------- */
+  var w2pRate = document.getElementById('w2p-rate');
+  var w2pWeight = document.getElementById('w2p-weight');
+  function calcW2P(animate){
+    var rate = num(w2pRate.value), weight = num(w2pWeight.value);
+    var validRate = w2pRate.value === '' || (isFinite(rate) && rate >= 0);
+    var validWeight = w2pWeight.value === '' || (isFinite(weight) && weight >= 0);
+    showError(document.getElementById('err-w2p-rate'), validRate ? '' : 'Enter a valid non-negative number');
+    showError(document.getElementById('err-w2p-weight'), validWeight ? '' : 'Enter a valid non-negative number');
+    markInvalid(w2pRate, !validRate); markInvalid(w2pWeight, !validWeight);
+
+    var price = 0; var w = isFinite(weight) ? weight : 0;
+    if(isFinite(rate) && rate >= 0 && isFinite(weight) && weight >= 0){ price = (weight*rate)/1000; }
+    document.getElementById('w2p-result').textContent = fmtFixed(price,2);
+    document.getElementById('w2p-result-meta').textContent = 'for '+fmt(w,1)+' g';
+    if(animate) pulse(document.getElementById('w2p-big'));
+
+    setRuler(document.getElementById('w2p-ruler-fill'), document.getElementById('w2p-ruler-marker'), w);
+    buildPriceTable(document.getElementById('w2p-price-table'), rate);
+    buildBudgetTable(document.getElementById('w2p-budget-table'), rate);
+  }
+  [w2pRate, w2pWeight].forEach(function(el){ el.addEventListener('input', function(){ calcW2P(true); }); });
+
+  /* ---------- PANEL 3 ---------- */
+  var rateWeight = document.getElementById('rate-weight');
+  var rateAmount = document.getElementById('rate-amount');
+  function calcRate(animate){
+    var weight = num(rateWeight.value), amount = num(rateAmount.value);
+    var validWeight = rateWeight.value === '' || (isFinite(weight) && weight >= 0);
+    var validAmount = rateAmount.value === '' || (isFinite(amount) && amount >= 0);
+    showError(document.getElementById('err-rate-weight'), validWeight ? '' : 'Enter a valid non-negative number');
+    showError(document.getElementById('err-rate-amount'), validAmount ? '' : 'Enter a valid non-negative number');
+    markInvalid(rateWeight, !validWeight); markInvalid(rateAmount, !validAmount);
+
+    var perKg = 0; var w = isFinite(weight) ? weight : 0; var a = isFinite(amount) ? amount : 0;
+    if(isFinite(weight) && weight > 0 && isFinite(amount) && amount >= 0){ perKg = (amount*1000)/weight; }
+    document.getElementById('rate-result').textContent = fmtFixed(perKg,2);
+    document.getElementById('rate-result-meta').textContent = 'from '+fmt(w,1)+' g for ₹'+fmtFixed(a,2);
+    if(animate) pulse(document.getElementById('rate-big'));
+
+    buildPriceTable(document.getElementById('rate-price-table'), perKg);
+    buildBudgetTable(document.getElementById('rate-budget-table'), perKg);
+  }
+  [rateWeight, rateAmount].forEach(function(el){ el.addEventListener('input', function(){ calcRate(true); }); });
+
+  /* ---------- PANEL 4 ---------- */
+  var customRate = document.getElementById('custom-rate');
+  var customAmount = document.getElementById('custom-amount');
+  var customUnitToggle = document.getElementById('custom-unit-toggle');
+  var customUnit = 'g';
+  customUnitToggle.addEventListener('click', function(){
+    var current = num(customAmount.value);
+    customUnit = customUnit === 'g' ? 'kg' : 'g';
+    customUnitToggle.textContent = (customUnit === 'g' ? 'grams' : 'kilograms') + ' ⇄';
+    customUnitToggle.dataset.unit = customUnit;
+    if(isFinite(current)){
+      if(customUnit === 'kg'){ customAmount.value = (current/1000).toString(); }
+      else { customAmount.value = (current*1000).toString(); }
+    }
+    calcCustom(true);
+  });
+  function calcCustom(animate){
+    var rate = num(customRate.value), amount = num(customAmount.value);
+    var validRate = customRate.value === '' || (isFinite(rate) && rate >= 0);
+    var validAmount = customAmount.value === '' || (isFinite(amount) && amount >= 0);
+    showError(document.getElementById('err-custom-rate'), validRate ? '' : 'Enter a valid non-negative number');
+    showError(document.getElementById('err-custom-amount'), validAmount ? '' : 'Enter a valid non-negative number');
+    markInvalid(customRate, !validRate); markInvalid(customAmount, !validAmount);
+
+    var grams = 0;
+    if(isFinite(amount) && amount >= 0){ grams = customUnit === 'kg' ? amount*1000 : amount; }
+    var price = (isFinite(rate) && rate >= 0) ? (grams*rate)/1000 : 0;
+
+    document.getElementById('custom-result').textContent = fmtFixed(price,2);
+    document.getElementById('custom-result-meta').textContent = 'for '+fmt(grams,1)+' g / '+fmtFixed(grams/1000,3)+' kg';
+    if(animate) pulse(document.getElementById('custom-big'));
+
+    buildPriceTable(document.getElementById('custom-price-table'), rate);
+    buildBudgetTable(document.getElementById('custom-budget-table'), rate);
+  }
+  [customRate, customAmount].forEach(function(el){ el.addEventListener('input', function(){ calcCustom(true); }); });
+
+  /* ---------- STEPPER buttons ---------- */
+  document.querySelectorAll('.stepper button').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var targetId = btn.dataset.step;
+      var dir = parseFloat(btn.dataset.dir);
+      var input = document.getElementById(targetId);
+      var current = num(input.value);
+      if(!isFinite(current)) current = 0;
+      var step = targetId.indexOf('-rate') !== -1 ? 5 : (targetId.indexOf('budget') !== -1 || targetId.indexOf('amount') !== -1 ? 10 : 50);
+      var next = Math.max(0, current + dir*step);
+      input.value = next;
+      input.dispatchEvent(new Event('input'));
+    });
+  });
+
+  /* ---------- PRESET CHIPS ---------- */
+  document.querySelectorAll('.chip-row').forEach(function(row){
+    var targetId = row.dataset.chipTarget;
+    var values = row.dataset.chipValues.split(',');
+    values.forEach(function(v){
+      var chip = document.createElement('button');
+      chip.className = 'chip';
+      chip.type = 'button';
+      var isRate = targetId.indexOf('rate') !== -1 && targetId.indexOf('-weight') === -1;
+      chip.textContent = isRate ? '₹'+v+'/kg' : v+' g';
+      chip.addEventListener('click', function(){
+        var input = document.getElementById(targetId);
+        input.value = v;
+        input.dispatchEvent(new Event('input'));
+      });
+      row.appendChild(chip);
+    });
+  });
+
+  /* ---------- CLEAR buttons (per-panel) ---------- */
+  document.querySelectorAll('[data-clear]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var scope = btn.dataset.clear;
+      document.querySelectorAll('#panel-'+scope+' input').forEach(function(inp){ inp.value = ''; markInvalid(inp, false); });
+      document.querySelectorAll('#panel-'+scope+' .field-error').forEach(function(e){ e.textContent=''; });
+      if(scope==='p2w') calcP2W(); if(scope==='w2p') calcW2P(); if(scope==='rate') calcRate(); if(scope==='custom') calcCustom();
+    });
+  });
+
+  /* ---------- CLEAR ALL (header) ---------- */
+  document.getElementById('clearAllBtn').addEventListener('click', function(){
+    document.querySelectorAll('.wrap input').forEach(function(inp){ inp.value=''; markInvalid(inp,false); });
+    document.querySelectorAll('.field-error').forEach(function(e){ e.textContent=''; });
+    calcP2W(); calcW2P(); calcRate(); calcCustom();
+  });
+
+  /* ---------- COPY / SHARE ---------- */
+  function resultText(target){
+    if(target==='p2w') return document.getElementById('p2w-result-g').textContent+' g ('+document.getElementById('p2w-result-kg').textContent+')';
+    if(target==='w2p') return '₹'+document.getElementById('w2p-result').textContent+' '+document.getElementById('w2p-result-meta').textContent;
+    if(target==='rate') return '₹'+document.getElementById('rate-result').textContent+'/kg';
+    if(target==='custom') return '₹'+document.getElementById('custom-result').textContent+' '+document.getElementById('custom-result-meta').textContent;
+    return '';
+  }
+  document.querySelectorAll('[data-copy-target]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var text = resultText(btn.dataset.copyTarget);
+      var restore = btn.textContent;
+      function done(){ btn.textContent = 'Copied ✓'; btn.classList.add('copied'); setTimeout(function(){ btn.textContent = restore; btn.classList.remove('copied'); }, 1400); }
+      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done).catch(done); } else { done(); }
+    });
+  });
+  document.querySelectorAll('[data-share-target]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var text = 'Tarazu result: ' + resultText(btn.dataset.shareTarget);
+      if(navigator.share){ navigator.share({ text: text }).catch(function(){}); }
+      else if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(function(){
+          var restore = btn.textContent; btn.textContent='Copied ✓'; btn.classList.add('copied');
+          setTimeout(function(){ btn.textContent = restore; btn.classList.remove('copied'); }, 1400);
+        });
+      }
+    });
+  });
+  document.getElementById('shareAppBtn').addEventListener('click', function(){
+    var text = 'Tarazu — a quick price/weight calculator: ' + location.href;
+    if(navigator.share){ navigator.share({ text: text }).catch(function(){}); }
+    else if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text); }
+  });
+
+  /* ---------- TABS ---------- */
+  var tabBtns = document.querySelectorAll('.tab-btn');
+  tabBtns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      tabBtns.forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
+      document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+      updateHeroBeam();
+    });
+  });
+
+  /* ---------- FORMULA collapsibles ---------- */
+  document.querySelectorAll('[data-formula-toggle]').forEach(function(toggle){
+    var body = toggle.parentElement.querySelector('.formula-body');
+    toggle.addEventListener('click', function(){
+      var isOpen = toggle.classList.toggle('open');
+      body.style.maxHeight = isOpen ? body.scrollHeight+'px' : '0';
+    });
+  });
+
+  /* ---------- THEME (single tap-to-toggle button) ---------- */
+  document.getElementById('themeToggleBtn').addEventListener('click', function(){
+    var next = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    document.body.setAttribute('data-theme', next);
+  });
+
+  /* ---------- HERO BEAM tilt ---------- */
+  function updateHeroBeam(){
+    var beam = document.getElementById('heroBeam');
+    var activeTab = document.querySelector('.tab-btn.active');
+    var tilt = 0;
+    if(activeTab){ var idx = Array.from(tabBtns).indexOf(activeTab); tilt = [-6, 6, -3, 3][idx] || 0; }
+    beam.style.transform = 'rotate('+tilt+'deg)';
+  }
+  updateHeroBeam();
+
+  /* ---------- initial calc ---------- */
+  calcP2W(); calcW2P(); calcRate(); calcCustom();
+
+})();
+</script>
+</body>
+</html>
